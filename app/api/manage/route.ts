@@ -95,19 +95,19 @@ export async function POST(req: Request) {
       for (const toolCall of res.tool_calls!) {
         const selectedTool = toolMap[toolCall.name as keyof typeof toolMap];
 
-        // If there is a previous output, modify `toolCall.args` based on the previous tool's output.
-        if (previousToolOutput && toolCall.name === "Upload-Images-Tool") {
-          // Parse `previousToolOutput` to extract `imageLinksArray`.
+        if (previousToolOutput) {
           const previousOutputContent = JSON.parse(previousToolOutput.content);
-          toolCall.args.imageUrlsArray =
-            previousOutputContent.imageLinksArray || [];
+
+          for (const key in toolCall.args) {
+            console.log("KEY", key);
+
+            if (previousOutputContent[key] !== undefined) {
+              toolCall.args[key] = previousOutputContent[key];
+            }
+          }
         }
 
-        // Invoke the tool with the modified `toolCall` object.
         const toolMessage = await selectedTool.invoke(toolCall);
-        console.log(toolMessage);
-
-        // Update the previousToolOutput with the current tool's output.
         previousToolOutput = toolMessage;
       }
     }

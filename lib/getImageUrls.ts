@@ -60,15 +60,15 @@ export async function getImageUrls(
       return { error: "Failed to retrieve data from Google Sheets." };
     }
 
-    const imageLinksArray = res.data.values.slice(1).flat();
+    const imageUrlsArray = res.data.values.slice(1).flat();
 
-    if (imageLinksArray.length === 0) {
+    if (imageUrlsArray.length === 0) {
       return { success: "No image links found in the specified column." };
     }
 
     return {
       success: "Image links fetched successfully.",
-      imageLinksArray: imageLinksArray,
+      imageUrlsArray: imageUrlsArray,
     };
   } catch (error) {
     console.error("ERROR", error);
