@@ -26,7 +26,8 @@ export const uploadImagesTool = tool(
   },
   {
     name: "Upload-Images-Tool",
-    description: "Use this tool to upload images to google drive",
+    description:
+      "Use this tool to get images from image urls and upload them to google drive",
     schema: z.object({
       imageUrlsArray: z
         .array(z.string())

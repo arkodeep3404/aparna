@@ -1,4 +1,5 @@
 import { Nango } from "@nangohq/node";
+import axios from "axios";
 import { v4 } from "uuid";
 
 export async function uploadImages(imageUrls: string[]) {
@@ -20,14 +21,15 @@ export async function uploadImages(imageUrls: string[]) {
 
     for (const imageUrl of imageUrls) {
       try {
-        const file = await fetch(imageUrl);
+        const file = await axios.get(imageUrl, { responseType: "arraybuffer" });
 
-        if (!file.ok) {
+        if (!file.data) {
           console.error(`Failed to fetch the file from URL: ${imageUrl}`);
           return { error: `Failed to fetch the file from URL: ${imageUrl}` };
         }
+        // console.log("FILE DATA", file.data);
 
-        const fileBuffer = await file.arrayBuffer();
+        const fileBuffer = file.data;
 
         const res = await nango.post({
           endpoint: "/upload/drive/v3/files?uploadType=media",

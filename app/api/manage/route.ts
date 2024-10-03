@@ -7,6 +7,7 @@ import {
 import { getImageUrlsTool, uploadImagesTool } from "@/lib/aiTools";
 import { DynamoDBChatMessageHistory } from "@langchain/community/stores/message/dynamodb";
 import { updateLastMessagesAdditionalKwargs } from "@/lib/updateLastMessagesAdditionalKwargs";
+import { toolMap } from "@/lib/toolMap";
 
 export async function POST(req: Request) {
   try {
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
     const prompt = ChatPromptTemplate.fromMessages([
       [
         "system",
-        `You are an AI automation expert. Call all the appropriate functions to perform all the tasks as instructed by the user. Use the tools provided to you to perform all the said tasks. Make sure to call all the required tools/functions to fully complete all the instructed tasks.`,
+        `You are an AI automation expert. Call all the appropriate functions to perform all the tasks as instructed by the user. Use the tools provided to you to perform all the said tasks. Make sure to call all the required tools/functions to fully complete all the instructed tasks. Even if you don't have all the required inputs always call all the necessary tools/functions and let the user know that required inputs were missing.`,
       ],
       new MessagesPlaceholder("chat_history"),
       ["human", "{input}"],
@@ -82,15 +83,33 @@ export async function POST(req: Request) {
       );
     }
 
-    //console.log(res);
-
     if (res.tool_calls?.length === 0) {
       console.log(res.content);
     } else {
       console.log(
         await updateLastMessagesAdditionalKwargs(process.env.SESSION_ID!)
       );
-      console.log(res.tool_calls);
+      console.log("RESPONSE", res);
+      let previousToolOutput: any = null;
+
+      for (const toolCall of res.tool_calls!) {
+        const selectedTool = toolMap[toolCall.name as keyof typeof toolMap];
+
+        // If there is a previous output, modify `toolCall.args` based on the previous tool's output.
+        if (previousToolOutput && toolCall.name === "Upload-Images-Tool") {
+          // Parse `previousToolOutput` to extract `imageLinksArray`.
+          const previousOutputContent = JSON.parse(previousToolOutput.content);
+          toolCall.args.imageUrlsArray =
+            previousOutputContent.imageLinksArray || [];
+        }
+
+        // Invoke the tool with the modified `toolCall` object.
+        const toolMessage = await selectedTool.invoke(toolCall);
+        console.log(toolMessage);
+
+        // Update the previousToolOutput with the current tool's output.
+        previousToolOutput = toolMessage;
+      }
     }
 
     return Response.json(
