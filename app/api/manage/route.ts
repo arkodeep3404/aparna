@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     const prompt = ChatPromptTemplate.fromMessages([
       [
         "system",
-        `You are an AI automation expert. Always call all the appropriate functions to perform all the tasks as instructed by the user. Use the tools provided to you to perform all the said tasks. Always make sure to call all the required tools/functions to fully complete all the instructed tasks. Even if you don't have all the required inputs always call all the necessary tools/functions and let the user know that required inputs were missing.`,
+        `You are an AI automation expert. Think carefully in a STEP BY STEP MANNER to break down the userPrompt into individual instructions and decide what tools/functions to call. Always call all the appropriate functions to perform all the tasks as instructed by the user. Use the tools provided to you to perform all the said tasks. Always make sure to call all the required tools/functions to fully complete all the instructed tasks. Even if you don't have all the required inputs always call all the necessary tools/functions and let the user know that required inputs were missing.`,
       ],
       new MessagesPlaceholder("chat_history"),
       ["human", "{input}"],
