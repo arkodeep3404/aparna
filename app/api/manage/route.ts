@@ -110,10 +110,12 @@ export async function POST(req: Request) {
 
           for (const key in toolCall.args) {
             if (previousOutputContent[key] !== undefined) {
-              toolCall.args[key] = toolMessage[key];
+              toolCall.args[key] = previousOutputContent[key];
             }
           }
         }
+
+        //console.log("TOOL CALL ARGS", toolCall.args);
 
         toolMessage = await selectedTool.invoke(toolCall);
 
