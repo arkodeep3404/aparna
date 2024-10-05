@@ -91,7 +91,7 @@ export async function POST(req: Request) {
     }
 
     let message;
-    let previousToolOutput;
+    let toolMessage;
 
     if (res.tool_calls?.length === 0) {
       message = res.content;
@@ -105,28 +105,23 @@ export async function POST(req: Request) {
       for (const toolCall of res.tool_calls!) {
         const selectedTool = toolMap[toolCall.name as keyof typeof toolMap];
 
-        if (previousToolOutput) {
-          const previousOutputContent = JSON.parse(previousToolOutput.content);
+        if (toolMessage) {
+          const previousOutputContent = JSON.parse(toolMessage.content);
 
           for (const key in toolCall.args) {
             if (previousOutputContent[key] !== undefined) {
-              toolCall.args[key] = previousOutputContent[key];
+              toolCall.args[key] = toolMessage[key];
             }
           }
         }
 
-        const toolMessage = await selectedTool.invoke(toolCall);
+        toolMessage = await selectedTool.invoke(toolCall);
+
         const toolMessageContent = JSON.parse(toolMessage.content);
-        console.log(
-          "toolMessageContent",
-          toolMessageContent.success
-            ? toolMessageContent.success
-            : toolMessageContent.error
-        );
         message = toolMessageContent.success
           ? toolMessageContent.success
           : toolMessageContent.error;
-        previousToolOutput = toolMessage;
+        console.log("toolMessageContent", message);
       }
     }
 
