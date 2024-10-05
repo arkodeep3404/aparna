@@ -23,11 +23,18 @@ export default function UploadForm() {
     try {
       setSubmitted(true);
 
+      // console.log("BODY", {
+      //   spreadsheetUrl: spreadsheetUrl.trim(),
+      //   sheetName: sheetName.trim(),
+      //   columnName: columnName.trim(),
+      //   userPrompt: userPrompt.trim(),
+      // });
+
       const res = await axios.post("/api/manage", {
-        spreadsheetUrl: spreadsheetUrl,
-        sheetName: sheetName,
-        columnName: columnName,
-        userPrompt: userPrompt,
+        spreadsheetUrl: spreadsheetUrl.trim(),
+        sheetName: sheetName.trim(),
+        columnName: columnName.trim(),
+        userPrompt: userPrompt.trim(),
       });
 
       console.log("File uploaded:", res.data);

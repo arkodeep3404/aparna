@@ -24,10 +24,17 @@ export async function POST(req: Request) {
       );
     }
 
+    // console.log("BODY", {
+    //   spreadsheetUrl: spreadsheetUrl.trim(),
+    //   sheetName: sheetName.trim(),
+    //   columnName: columnName.trim(),
+    //   userPrompt: userPrompt.trim(),
+    // });
+
     const prompt = ChatPromptTemplate.fromMessages([
       [
         "system",
-        `You are an AI automation expert. Call all the appropriate functions to perform all the tasks as instructed by the user. Use the tools provided to you to perform all the said tasks. Make sure to call all the required tools/functions to fully complete all the instructed tasks. Even if you don't have all the required inputs always call all the necessary tools/functions and let the user know that required inputs were missing.`,
+        `You are an AI automation expert. Always call all the appropriate functions to perform all the tasks as instructed by the user. Use the tools provided to you to perform all the said tasks. Always make sure to call all the required tools/functions to fully complete all the instructed tasks. Even if you don't have all the required inputs always call all the necessary tools/functions and let the user know that required inputs were missing.`,
       ],
       new MessagesPlaceholder("chat_history"),
       ["human", "{input}"],
@@ -83,14 +90,17 @@ export async function POST(req: Request) {
       );
     }
 
+    let message;
+    let previousToolOutput;
+
     if (res.tool_calls?.length === 0) {
-      console.log(res.content);
+      message = res.content;
+      console.log(message);
     } else {
       console.log(
         await updateLastMessagesAdditionalKwargs(process.env.SESSION_ID!)
       );
-      console.log("RESPONSE", res);
-      let previousToolOutput: any = null;
+      console.log("TOOL CALLS", res.tool_calls);
 
       for (const toolCall of res.tool_calls!) {
         const selectedTool = toolMap[toolCall.name as keyof typeof toolMap];
@@ -99,8 +109,6 @@ export async function POST(req: Request) {
           const previousOutputContent = JSON.parse(previousToolOutput.content);
 
           for (const key in toolCall.args) {
-            console.log("KEY", key);
-
             if (previousOutputContent[key] !== undefined) {
               toolCall.args[key] = previousOutputContent[key];
             }
@@ -108,13 +116,23 @@ export async function POST(req: Request) {
         }
 
         const toolMessage = await selectedTool.invoke(toolCall);
+        const toolMessageContent = JSON.parse(toolMessage.content);
+        console.log(
+          "toolMessageContent",
+          toolMessageContent.success
+            ? toolMessageContent.success
+            : toolMessageContent.error
+        );
+        message = toolMessageContent.success
+          ? toolMessageContent.success
+          : toolMessageContent.error;
         previousToolOutput = toolMessage;
       }
     }
 
     return Response.json(
       {
-        success: "Images uploaded successfully.",
+        success: message,
       },
       { status: 200 }
     );

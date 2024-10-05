@@ -46,6 +46,7 @@ export async function getImageUrls(
     }
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${columnName}:${columnName}`;
+    //console.log("URL", url);
 
     const res = await nango.get({
       endpoint: url,
@@ -61,15 +62,16 @@ export async function getImageUrls(
     }
 
     const imageUrlsArray = res.data.values.slice(1).flat();
+    //console.log("imageUrlsArray", imageUrlsArray);
 
     if (imageUrlsArray.length === 0) {
       return { success: "No image links found in the specified column." };
+    } else {
+      return {
+        success: "Image links fetched successfully.",
+        imageUrlsArray: imageUrlsArray,
+      };
     }
-
-    return {
-      success: "Image links fetched successfully.",
-      imageUrlsArray: imageUrlsArray,
-    };
   } catch (error) {
     console.error("ERROR", error);
     return {
